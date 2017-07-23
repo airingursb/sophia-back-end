@@ -19,40 +19,57 @@ var VersionModel = require('../models').Version;
 qiniu.conf.ACCESS_KEY = QINIU_ACCESS;
 qiniu.conf.SECRET_KEY = QINIU_SECRET;
 
+router.post('/upload', function (req, res, next) {
+  var form = new multiparty.Form({uploadDir: './public/files/'});
+  form.parse(req, function (err, fields, files) {
+    var filesTmp = JSON.stringify(files, null, 2);
+    if (err) {
+      console.log('parse error: ' + err);
+    } else {
+      console.log('parse files: ' + filesTmp);
+      var inputFile = files.inputFile[0];
+      var uploadedPath = inputFile.path;
+      var dstPath = './public/files/' + inputFile.originalFilename;
+      fs.rename(uploadedPath, dstPath, function (err) {
+        if (err) {
+          console.log('rename error: ' + err);
+        } else {
+          console.log('rename ok');
+        }
+      });
+    }
+
+    res.writeHead(200, {'content-type': 'text/plain;charset=utf-8'});
+    res.write('received upload:\n\n');
+    res.end(util.inspect({fields: fields, files: filesTmp}));
+  });
+});
+
 function uptoken(bucket, key) {
   var putPolicy = new qiniu.rs.PutPolicy(bucket + ":" + key);
   return putPolicy.token();
 }
 
-/* 获取七牛token */
-router.post('/qiniu_token', function (req, res, next) {
+router.get('/qiniu_token', function (req, res, next) {
 
-  var timestamp = new Date().getTime();
-  if (req.body.token == null || req.body.uid == null || req.body.token == null || req.body.filename == null) {
-
-    return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
+  if (req.query.token == null || req.query.uid == null || req.query.timestamp == null || req.query.filename == null) {
+    return res.jsonp({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
   }
-  var qiniu_token = uptoken('rideread', req.body.filename);
-  var data = {
-    up_token: qiniu_token
-  }
-
-  return res.json({status: 0, timestamp: timestamp, data: data, msg: MESSAGE.SUCCESS});
+  var qiniu_token = uptoken(BUCKET, req.query.filename);
+  return res.jsonp({status: 0, qiniu_token: qiniu_token, msg: MESSAGE.SUCCESS});
 });
 
-/* util/yun_pian_code */
-router.post('/yun_pian_code', function (req, res, next) {
+router.get('/code', function (req, res, next) {
 
   var timestamp = new Date().getTime();
-  if (req.body.timestamp == null || req.body.phonenumber == null) {
-
-    return res.json({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
+  if (req.query.timestamp == null || req.query.phonenumber == null) {
+    return res.jsonp({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
   }
-  var code = Math.floor(Math.random() * 899999 + 100000)
+  var code = Math.floor(Math.random() * 899999 + 100000);
 
   var postData = {
-    mobile: req.body.phonenumber,
-    text: '【骑阅APP】您的验证码是' + code,
+    mobile: req.query.phonenumber,
+    text: '【双生APP】您的验证码是' + code,
     apikey: YUNPIAN_APIKEY
   };
 
@@ -71,43 +88,41 @@ router.post('/yun_pian_code', function (req, res, next) {
   };
 
   var model = {
-    phonenumber: req.body.phonenumber,
-    rand_code: code,
+    user_account: req.query.phonenumber,
+    code: code,
     timestamp: timestamp,
     used: false
   };
 
   CodeModel.findAll({
     where: {
-      phonenumber: req.body.phonenumber,
+      user_account: req.query.phonenumber,
       used: false
     }
   }).then(function (results) {
     if (results[0] !== undefined) {
       console.log('连续请求:' + (timestamp - results[0].timestamp));
       if (timestamp - results[0].timestamp < 600000) {
-        res.json({status: 5000, msg: MESSAGE.REQUEST_ERROR});
-        return;
+        return res.jsonp({status: 5000, msg: MESSAGE.REQUEST_ERROR});
       }
     }
     CodeModel.create(model).then(function () {
-      return res.json({status: 0, msg: MESSAGE.SUCCESS});
-    }).catch(next);
 
-    var req = https.request(options, function (res) {
-      res.setEncoding('utf8');
-      res.on('data', function (chunk) {
-        console.log(JSON.parse(chunk));
+      var req = https.request(options, function (res) {
+        res.setEncoding('utf8');
+        res.on('data', function (chunk) {
+          console.log(JSON.parse(chunk));
+        });
+        res.on('end', function () {
+          console.log('over');
+        });
       });
-      res.on('end', function () {
-        console.log('over');
-      });
+      req.write(content);
+      req.end();
     });
-    req.write(content);
-    req.end();
-  });
 
-  return res.json({status: 0, msg: MESSAGE.SUCCESS, data: {rand_code: code}});
+    return res.jsonp({status: 0, msg: MESSAGE.SUCCESS, data: code});
+  });
 });
 
 module.exports = router;

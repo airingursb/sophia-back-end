@@ -22,11 +22,11 @@ module.exports = function (sequelize, DataTypes) {
         'type': DataTypes.INTEGER,
         'allowNull': false
       },
-      'papername': {
+      'paper_name': {
         'type': DataTypes.STRING(500),
         'allowNull': false
       },
-      'paperurl': {
+      'paper_url': {
         'type': DataTypes.STRING(500),
         'allowNull': true
       },

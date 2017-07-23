@@ -9,6 +9,10 @@ var Idea = sequelize.import('./idea');
 var Code = sequelize.import('./code');
 
 User.hasMany(Comment, {foreignKey: 'userId', targetKey: 'userId'});
+User.hasMany(Paper, {foreignKey: 'userId', targetKey: 'userId'});
+User.hasMany(Work, {foreignKey: 'userId', targetKey: 'userId'});
+User.hasMany(Data, {foreignKey: 'userId', targetKey: 'userId'});
+User.hasMany(Idea, {foreignKey: 'userId', targetKey: 'userId'});
 
 Philosopher.hasMany(Comment, {foreignKey: 'philosopherId', targetKey: 'philosopherId'});
 Philosopher.hasMany(Paper, {foreignKey: 'philosopherId', targetKey: 'philosopherId'});

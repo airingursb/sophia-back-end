@@ -13,6 +13,10 @@ module.exports = function (sequelize, DataTypes) {
         'type': DataTypes.STRING(125),
         'allowNull': false
       },
+      'face': {
+        'type': DataTypes.STRING(250),
+        'allowNull': false
+      },
       'sex': {
         'type': DataTypes.INTEGER,
         'allowNull': true

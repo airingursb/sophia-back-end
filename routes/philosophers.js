@@ -15,12 +15,6 @@ var MESSAGE = require('./config').MESSAGE;
 
 router.get('/show_list', function (req, res, next) {
 
-  if (req.query.uid == null
-    || req.query.token == null
-    || req.query.timestamp == null) {
-    return res.jsonp({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
-  }
-
   PhilosopherModel.findAll().then(function (results) {
 
     var philosophers = [];
@@ -49,7 +43,7 @@ router.get('/show_detail', function (req, res, next) {
     where: {
       id: req.query.pid
     },
-    include: [UserModel, CommentModel, PaperModel, WorkModel, DataModel, IdeaModel]
+    include: [CommentModel, PaperModel, WorkModel, DataModel, IdeaModel]
   }).then(function (philosopher) {
     return res.jsonp({status: 0, data: philosopher, msg: MESSAGE.SUCCESS});
   });
@@ -72,10 +66,11 @@ router.get('/add_philosopher', function (req, res, next) {
     place: req.query.place ? req.query.place : '',
     time: req.query.time ? req.query.time : '',
     wiki: req.query.wiki ? req.query.wiki : '',
-    introduce: req.query.introduce ? req.query.introduce : ''
+    introduce: req.query.introduce ? req.query.introduce : '',
+    createdAt: new Date().getTime()
   };
 
-  PhilosopherModel.create().then(function (philosopher) {
+  PhilosopherModel.create(philosopher).then(function (philosopher) {
     return res.jsonp({status: 0, data: philosopher, msg: MESSAGE.SUCCESS});
   });
 });
@@ -313,6 +308,34 @@ router.get('/add_idea', function (req, res, next) {
       })
     })
   });
+});
+
+router.get('/search', function (req, res, next) {
+
+  var timestamp = new Date().getTime();
+
+  if (req.query.search == null) {
+    return res.jsonp({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
+  PhilosopherModel.findAll({
+    where: {
+      name: {
+        '$like': '%' + req.query.search + '%'
+      }
+    }
+  }).then(function (results) {
+    var philosophers = [];
+    results.forEach(function (result) {
+      var philosopher = {};
+      philosopher.pid = result.id;
+      philosopher.avatar = result.avatar;
+      philosopher.name = result.name;
+      philosophers.push(philosopher)
+    });
+    return res.jsonp({status: 0, data: philosophers, msg: MESSAGE.SUCCESS});
+  })
+
 });
 
 module.exports = router;

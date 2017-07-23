@@ -16,17 +16,17 @@ const MESSAGE = {
   FOLLOWER_IS_EXISE: '已经存在该粉丝', // 5001
 };
 
-const KEY = 'airing';
+const KEY = '';
 const SQL_PASSWORD = '';
-const YUNPIAN_APIKEY = 'd1854b3aa962e88c4880bbcd10014877';
-const QINIU_ACCESS = 'fbVYMBeuMglXqIDmW1H_tlOkb4CrxlLCIUPjGsRV';
-const QINIU_SECRET = 'UfLYZXK0ihHkaqTA2QQdzbn1FkDHH0G8oVCaRXMf';
-const BUCKET = 'rideread';
-const ADMIN_USER = 'airing';
-const ADMIN_PASSWORD = '1123581321';
+const YUNPIAN_APIKEY = '';
+const QINIU_ACCESS = '';
+const QINIU_SECRET = '';
+const BUCKET = '';
+const ADMIN_USER = '';
+const ADMIN_PASSWORD = '';
 
 var JPush = require('jpush-sdk');
-var client = JPush.buildClient('9133d17d9a1e9406202dcd5e', '662a7ffad97c79da35b1187d');
+var client = JPush.buildClient('', '');
 
 function getNowFormatDate() {
   var date = new Date();
