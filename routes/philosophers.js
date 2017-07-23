@@ -67,7 +67,8 @@ router.get('/add_philosopher', function (req, res, next) {
     time: req.query.time ? req.query.time : '',
     wiki: req.query.wiki ? req.query.wiki : '',
     introduce: req.query.introduce ? req.query.introduce : '',
-    createdAt: new Date().getTime()
+    createdAt: new Date().getTime(),
+    tags: '哲学'
   };
 
   PhilosopherModel.create(philosopher).then(function (philosopher) {
@@ -90,8 +91,9 @@ router.get('/add_comment', function (req, res, next) {
   var comment = {
     uid: req.query.uid,
     philosopherId: req.query.pid,
-    username: req.query.username ? req.query.username : '',
-    face_url: req.query.face_url ? req.query.face_url : '',
+    username: '',
+    face_url: '',
+    className: '',
     msg: req.query.msg ? req.query.msg : '',
     philosopher: {},
     user: {},
@@ -105,7 +107,8 @@ router.get('/add_comment', function (req, res, next) {
   }).then(function (user) {
     comment.user = user;
     comment.username = user.username;
-    comment.face_url = user.face_url;
+    comment.face_url = user.face;
+    comment.className = user.className;
 
     PhilosopherModel.findOne({
       where: {
@@ -135,10 +138,10 @@ router.get('/add_paper', function (req, res, next) {
   var paper = {
     uid: req.query.uid,
     philosopherId: req.query.pid,
-    username: req.query.username ? req.query.username : '',
-    face_url: req.query.face_url ? req.query.face_url : '',
-    papername: req.query.papername ? req.query.papername : '',
-    paperurl: req.query.paperurl ? req.query.paperurl : '',
+    username: '',
+    face_url: '',
+    paper_name: req.query.papername ? req.query.papername : '',
+    paper_url: req.query.paperurl ? req.query.paperurl : '',
     author: req.query.author ? req.query.author : '',
     rating: req.query.rating ? req.query.rating : '',
     philosopher: {},
@@ -153,7 +156,7 @@ router.get('/add_paper', function (req, res, next) {
   }).then(function (user) {
     paper.user = user;
     paper.username = user.username;
-    paper.face_url = user.face_url;
+    paper.face_url = user.face;
 
     PhilosopherModel.findOne({
       where: {
@@ -183,8 +186,8 @@ router.get('/add_works', function (req, res, next) {
   var works = {
     uid: req.query.uid,
     philosopherId: req.query.pid,
-    username: req.query.username ? req.query.username : '',
-    face_url: req.query.face_url ? req.query.face_url : '',
+    username: '',
+    face_url: '',
     worksname: req.query.worksname ? req.query.worksname : '',
     worksurl: req.query.worksurl ? req.query.worksurl : '',
     rating: req.query.rating ? req.query.rating : '',
@@ -200,7 +203,7 @@ router.get('/add_works', function (req, res, next) {
   }).then(function (user) {
     works.user = user;
     works.username = user.username;
-    works.face_url = user.face_url;
+    works.face_url = user.face;
 
     PhilosopherModel.findOne({
       where: {
@@ -230,8 +233,8 @@ router.get('/add_data', function (req, res, next) {
   var data = {
     uid: req.query.uid,
     philosopherId: req.query.pid,
-    username: req.query.username ? req.query.username : '',
-    face_url: req.query.face_url ? req.query.face_url : '',
+    username: '',
+    face_url: '',
     name: req.query.name ? req.query.name : '',
     url: req.query.url ? req.query.url : '',
     rating: req.query.rating ? req.query.rating : '',
@@ -247,7 +250,7 @@ router.get('/add_data', function (req, res, next) {
   }).then(function (user) {
     data.user = user;
     data.username = user.username;
-    data.face_url = user.face_url;
+    data.face_url = user.face;
 
     PhilosopherModel.findOne({
       where: {
@@ -276,9 +279,10 @@ router.get('/add_idea', function (req, res, next) {
 
   var idea = {
     uid: req.query.uid,
+    userId: req.query.uid,
     philosopherId: req.query.pid,
-    username: req.query.username ? req.query.username : '',
-    face_url: req.query.face_url ? req.query.face_url : '',
+    username: '',
+    face_url: '',
     content: req.query.content ? req.query.content : '',
     frombook: req.query.frombook ? req.query.frombook : '',
     frompaper: req.query.frompaper ? req.query.frompaper : '',
@@ -295,7 +299,7 @@ router.get('/add_idea', function (req, res, next) {
   }).then(function (user) {
     idea.user = user;
     idea.username = user.username;
-    idea.face_url = user.face_url;
+    idea.face_url = user.face;
 
     PhilosopherModel.findOne({
       where: {
@@ -303,11 +307,48 @@ router.get('/add_idea', function (req, res, next) {
       }
     }).then(function (philosopher) {
       idea.philosopher = philosopher;
+      console.log(idea);
       IdeaModel.create(idea).then(function (result) {
         return res.jsonp({status: 0, data: result, msg: MESSAGE.SUCCESS});
       })
     })
   });
+});
+
+router.get('/add_tag', function (req, res, next) {
+
+  var timestamp = new Date().getTime();
+
+  if (req.query.uid == null
+    || req.query.token == null
+    || req.query.timestamp == null
+    || req.query.pid == null
+    || req.query.tag == null) {
+    return res.jsonp({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
+  }
+
+  PhilosopherModel.findOne({
+    where: {
+      id: req.query.pid
+    }
+  }).then(function (philosopher) {
+    var tags = philosopher.tags.split(',');
+    if (tags.indexOf(req.query.tag) === -1) {
+      tags.push(req.query.tag);
+      PhilosopherModel.update({
+        tags: tags.join(',')
+      }, {
+        where: {
+          id: req.query.pid
+        }
+      }).then(function () {
+        return res.jsonp({status: 0, msg: MESSAGE.SUCCESS});
+      })
+    } else {
+      return res.jsonp({status: 202});
+    }
+
+  })
 });
 
 router.get('/search', function (req, res, next) {
