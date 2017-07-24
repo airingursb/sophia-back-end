@@ -30,6 +30,29 @@ router.get('/show_list', function (req, res, next) {
   });
 });
 
+router.get('/show_tags', function (req, res, next) {
+
+  PhilosopherModel.findAll({
+    where: {
+      tags: {
+        '$like': '%' + req.query.tag + '%'
+      }
+    }
+  }).then(function (results) {
+
+    var philosophers = [];
+    results.forEach(function (result) {
+      var philosopher = {};
+      philosopher.pid = result.id;
+      philosopher.avatar = result.avatar;
+      philosopher.name = result.name;
+      philosophers.push(philosopher)
+    });
+
+    return res.jsonp({status: 0, data: philosophers, msg: MESSAGE.SUCCESS});
+  });
+});
+
 router.get('/show_detail', function (req, res, next) {
 
   if (req.query.uid == null
@@ -359,23 +382,43 @@ router.get('/search', function (req, res, next) {
     return res.jsonp({status: 1000, msg: MESSAGE.PARAMETER_ERROR})
   }
 
-  PhilosopherModel.findAll({
-    where: {
-      name: {
-        '$like': '%' + req.query.search + '%'
+  if (req.query.search.substr(0, 1) === '#') {
+    PhilosopherModel.findAll({
+      where: {
+        tags: {
+          '$like': '%' + req.query.search.substring(1, req.query.search.length) + '%'
+        }
       }
-    }
-  }).then(function (results) {
-    var philosophers = [];
-    results.forEach(function (result) {
-      var philosopher = {};
-      philosopher.pid = result.id;
-      philosopher.avatar = result.avatar;
-      philosopher.name = result.name;
-      philosophers.push(philosopher)
-    });
-    return res.jsonp({status: 0, data: philosophers, msg: MESSAGE.SUCCESS});
-  })
+    }).then(function (results) {
+      var philosophers = [];
+      results.forEach(function (result) {
+        var philosopher = {};
+        philosopher.pid = result.id;
+        philosopher.avatar = result.avatar;
+        philosopher.name = result.name;
+        philosophers.push(philosopher)
+      });
+      return res.jsonp({status: 0, data: philosophers, msg: MESSAGE.SUCCESS});
+    })
+  } else {
+    PhilosopherModel.findAll({
+      where: {
+        name: {
+          '$like': '%' + req.query.search + '%'
+        }
+      }
+    }).then(function (results) {
+      var philosophers = [];
+      results.forEach(function (result) {
+        var philosopher = {};
+        philosopher.pid = result.id;
+        philosopher.avatar = result.avatar;
+        philosopher.name = result.name;
+        philosophers.push(philosopher)
+      });
+      return res.jsonp({status: 0, data: philosophers, msg: MESSAGE.SUCCESS});
+    })
+  }
 
 });
 
